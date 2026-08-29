@@ -1,0 +1,989 @@
+/* =====================================================================
+   MTX GROUP — Retail Suite Design System
+   Offline-first POS & Business OS, run per store.
+
+   The palette is deliberately WARM AND NEUTRAL: charcoal, sand and stone.
+   That neutral shell is the constant; the ACCENT (--primary, --accent,
+   --brand-grad …) is injected at runtime by js/stores.js from the active
+   store's identity — plum for Melora, antique gold for Bangeen Crystal —
+   so the same components carry each house's colour without a second
+   stylesheet.
+
+   Tokens → Base → Layout → Components → Modules → Responsive → RTL
+   ===================================================================== */
+
+/* ------------------------------ Tokens ------------------------------ */
+:root {
+  /* ---- MTX Group shell palette (store-neutral) ---- */
+  --navy:      #1C1916;  /* Ink        — kept under the old name so every  */
+  --navy-2:    #2A2622;  /* Graphite     existing rule re-skins for free   */
+  --navy-3:    #14110F;  /* Charcoal   */
+  --blue:      #8A7B63;  /* Stone      */
+  --sky:       #A89880;  /* Sand       */
+  --cyan:      #C9A227;  /* Brass      */
+  --cloud:     #F5F1EC;  /* Linen      */
+  --white:     #FFFFFF;
+
+  /* Functional status colors (POS semantics) — muted to suit the warm shell */
+  --green:     #1F9D55;
+  --orange:    #E0813C;
+  --amber:     #D8A33A;
+  --red:       #D7443E;
+
+  /* ---- Semantic (light theme) ---- */
+  --bg:            #F5F1EC;
+  --surface:       #FFFFFF;
+  --surface-2:     #FBF8F4;
+  --surface-3:     #F0EAE2;
+  --border:        #E7DFD4;
+  --border-strong: #D5C9BA;
+  --text:          #1C1916;
+  --text-2:        #6B6259;
+  --text-3:        #968C80;
+
+  /* ---- Store accent (overwritten inline per store; these are the MTX
+     Group defaults used on the picker screen, before a store is open) ---- */
+  --primary:      #8A7B63;
+  --primary-2:    #A89880;
+  --primary-soft: #F3EEE6;
+  --accent:       #C9A227;
+  --on-primary:   #FFFFFF;
+  --brand-grad:   linear-gradient(120deg, #3A342D 0%, #6B6157 55%, #A89880 100%);
+  --brand-glow:   rgba(60,52,44,.35);
+
+  --ink-grad:   linear-gradient(165deg, #2A2622 0%, #1C1916 60%, #14110F 100%);
+  --navy-grad:  var(--ink-grad);
+  --hero-grad:  radial-gradient(120% 140% at 12% 8%, #2E2924 0%, #1C1916 58%, #12100E 100%);
+  --badge-grad: linear-gradient(150deg, #3A342D 0%, #1C1916 100%);
+  --badge-border: rgba(201,162,39,.30);
+
+  /* Elevation — warm shadows, accent-tinted glow */
+  --shadow-sm: 0 1px 2px rgba(40,33,26,.06);
+  --shadow:    0 4px 18px rgba(40,33,26,.09);
+  --shadow-lg: 0 16px 40px rgba(40,33,26,.16);
+  --glow:      0 10px 26px -10px var(--brand-glow);
+  --glow-lg:   0 22px 50px -14px var(--brand-glow);
+  --ring:      0 0 0 3px rgba(138,123,99,.20);
+
+  /* Radius — softer and more generous than the old shell */
+  --r-sm: 12px;  --r: 16px;  --r-lg: 22px;  --r-xl: 30px;  --r-full: 999px;
+  --sp: 4px;
+
+  /* ---- Type: Marcellus (display serif) + Inter (body) ---- */
+  --font: 'Inter', system-ui, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-display: 'Marcellus', Georgia, 'Times New Roman', serif;
+  --font-num: 'Inter', system-ui, Helvetica, Arial, sans-serif;
+  --font-rtl: 'Cairo', 'Noto Kufi Arabic', 'Segoe UI', sans-serif;
+
+  --sidebar-w: 272px;
+  --topbar-h: 68px;
+}
+
+:root[data-theme="dark"] {
+  --bg:            #14110F;
+  --surface:       #1C1916;
+  --surface-2:     #221E1A;
+  --surface-3:     #2C2722;
+  --border:        #332D27;
+  --border-strong: #473F37;
+  --text:          #F2EDE6;
+  --text-2:        #B3A899;
+  --text-3:        #8A8074;
+  --primary-soft:  #262019;
+  --shadow:    0 4px 18px rgba(0,0,0,.5);
+  --shadow-lg: 0 18px 44px rgba(0,0,0,.62);
+  --ink-grad:  linear-gradient(165deg, #211D19 0%, #17140F 100%);
+  --hero-grad: radial-gradient(120% 140% at 12% 8%, #262119 0%, #17140F 60%, #0F0D0B 100%);
+}
+
+/* ------------------------------ Base ------------------------------ */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+[dir="rtl"] body, .rtl { font-family: var(--font-rtl); }
+/* Display face: headlines, numbers, hero moments (brand spec 04 — Typography) */
+h1,h2,h3,h4 { margin: 0; font-family: var(--font-display); font-weight: 400; letter-spacing: .005em; }
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4 { font-family: var(--font-rtl); }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+img, svg { max-width: 100%; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; border: 2px solid var(--bg); }
+.muted { color: var(--text-2); }
+.tiny { font-size: 12px; }
+/* Numbers use the display face with tabular figures so money columns align */
+.mono { font-family: var(--font-num); font-weight: 600; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+/* ---- MTX badge: dark rounded-square housing the group mark ----
+   Radius = 32% of size, mark = 64% of size, centered. */
+.mtx-badge {
+  --badge-size: 56px;
+  width: var(--badge-size); height: var(--badge-size);
+  border-radius: calc(var(--badge-size) * .32);
+  background: var(--badge-grad);
+  border: 1px solid var(--badge-border);
+  box-shadow: 0 10px 26px -12px rgba(28,25,22,.6), inset 0 1px 0 rgba(255,255,255,.07);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  overflow: hidden;
+}
+.mtx-badge img, .mtx-badge svg { width: 100%; height: 100%; display: block; }
+.mtx-badge.sm { --badge-size: 34px; border-radius: 10px; }
+.mtx-badge.flat { box-shadow: inset 0 1px 0 rgba(255,255,255,.07); }
+
+/* A store's own logo sits on white — both house marks are drawn for light
+   ground, so never tint or invert them. */
+.logo-plate {
+  background: #fff; border-radius: 14px; padding: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(28,25,22,.12);
+}
+.logo-plate img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+/* Wordmark lockup */
+.wordmark { font-family: var(--font-display); font-weight: 400; letter-spacing: .01em; line-height: 1.05; }
+.wordmark-sub { font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--text-3); margin-top: 6px; }
+
+/* MTX Group lockup (picker header) */
+.mtx-lockup { display: flex; align-items: center; gap: 12px; }
+.mtx-lockup > span:last-child { display: flex; flex-direction: column; gap: 4px; }
+.mtx-lockup b { font-family: var(--font-display); font-weight: 400; font-size: 19px; letter-spacing: .02em; }
+.mtx-lockup i { font-style: normal; font-size: 9.5px; font-weight: 600; letter-spacing: .2em; color: var(--text-3); }
+
+/* ------------------------------ Utilities ------------------------------ */
+.row { display: flex; align-items: center; gap: 12px; }
+.row.wrap { flex-wrap: wrap; }
+.between { justify-content: space-between; }
+.grow { flex: 1; }
+.center { align-items: center; justify-content: center; }
+.grid { display: grid; gap: 18px; }
+.hide { display: none !important; }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-orange { color: var(--orange); }
+.right { text-align: right; }
+[dir="rtl"] .right { text-align: left; }
+
+/* ------------------------------ Buttons ------------------------------ */
+.btn {
+  --b: var(--primary);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px; border-radius: var(--r-sm); border: 1px solid transparent;
+  background: var(--surface-3); color: var(--text); font-weight: 600; cursor: pointer;
+  transition: .16s ease; white-space: nowrap; -webkit-user-select: none; user-select: none;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn.primary { background: var(--brand-grad); color: var(--on-primary, #fff); box-shadow: var(--glow); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.dark { background: var(--navy); color: #fff; }
+.btn.ghost { background: transparent; border-color: var(--border); }
+.btn.ghost:hover { background: var(--surface-3); }
+.btn.success { background: var(--green); color: #06301a; }
+.btn.danger { background: var(--red); color: #fff; }
+.btn.warn { background: var(--orange); color: #3a1a02; }
+.btn.block { width: 100%; }
+.btn.lg { padding: 14px 22px; font-size: 15px; }
+.btn.sm { padding: 6px 11px; font-size: 12.5px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.icon-btn {
+  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; transition: .15s;
+}
+.icon-btn:hover { background: var(--surface-3); }
+
+/* ------------------------------ Forms ------------------------------ */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field > label { font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+.input, .select, textarea.input {
+  width: 100%; padding: 13px 15px; background: var(--surface); color: var(--text);
+  border: 1.5px solid var(--border); border-radius: var(--r-sm); transition: .15s; outline: none;
+}
+.input:focus, .select:focus, textarea.input:focus { border-color: var(--primary); box-shadow: var(--ring); }
+.input::placeholder { color: var(--text-3); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+
+/* ------------------------------ Badges / Pills ------------------------------ */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--r-full);
+  font-size: 11.5px; font-weight: 700; background: var(--surface-3); color: var(--text-2);
+}
+.badge.green { background: rgba(34,197,94,.14); color: #16a34a; }
+.badge.blue  { background: rgba(37,99,235,.14); color: var(--blue); }
+.badge.cyan  { background: rgba(6,182,212,.15); color: #0891b2; }
+.badge.orange{ background: rgba(249,115,22,.15); color: #ea580c; }
+.badge.red   { background: rgba(239,68,68,.14); color: var(--red); }
+.badge.gray  { background: var(--surface-3); color: var(--text-2); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
+
+/* ------------------------------ Cards ------------------------------ */
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm); padding: 20px;
+}
+.card.pad0 { padding: 0; }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-head h3 { font-size: 15.5px; }
+.section-title { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin: 6px 0 12px; }
+
+/* Stat cards */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 18px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.stat .ico {
+  width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--primary-soft); color: var(--primary); font-size: 20px; margin-bottom: 12px;
+}
+.stat .ico.g { background: rgba(34,197,94,.14); color: var(--green); }
+.stat .ico.o { background: rgba(249,115,22,.15); color: var(--orange); }
+.stat .ico.c { background: rgba(6,182,212,.15); color: #0891b2; }
+.stat .ico.r { background: rgba(239,68,68,.14); color: var(--red); }
+.stat .label { color: var(--text-2); font-size: 12.5px; font-weight: 600; }
+.stat .value { font-size: 25px; font-weight: 800; margin-top: 2px; letter-spacing: -.02em; }
+.stat .delta { font-size: 12px; font-weight: 700; margin-top: 6px; }
+
+/* ------------------------------ Tables ------------------------------ */
+.table-wrap { overflow-x: auto; border-radius: var(--r); }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tbl th {
+  text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-3); font-weight: 700; padding: 12px 14px; border-bottom: 1px solid var(--border);
+  white-space: nowrap; background: var(--surface-2);
+}
+[dir="rtl"] .tbl th { text-align: right; }
+.tbl td { padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.tbl tbody tr:hover { background: var(--surface-2); }
+.tbl tbody tr:last-child td { border-bottom: none; }
+
+/* ------------------------------ App Layout ------------------------------ */
+/* Grid already reverses column placement under dir=rtl, so the SAME column
+   definition puts the sidebar on the right in RTL — don't swap the sizes. */
+.app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; height: 100vh; overflow: hidden; }
+
+.sidebar {
+  background: var(--ink-grad); color: rgba(255,255,255,.72); padding: 18px 14px;
+  height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+}
+/* The brand block doubles as the "switch store" control — the active shop's
+   own logo is the most legible reminder of which books you're writing to. */
+.sidebar .brand {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: inherit;
+  padding: 10px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,.09);
+  border-radius: var(--r); background: rgba(255,255,255,.04);
+  color: inherit; font: inherit; cursor: pointer; transition: .16s;
+}
+.sidebar .brand:hover { background: rgba(255,255,255,.09); border-color: var(--primary); }
+.sidebar .brand .brand-logo {
+  width: 44px; height: 44px; flex-shrink: 0; background: #fff; border-radius: 11px;
+  padding: 5px; display: flex; align-items: center; justify-content: center;
+}
+.sidebar .brand .brand-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.sidebar .brand .brand-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.sidebar .brand .wordmark { color: #fff; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar .brand .wordmark-sub { font-size: 9px; letter-spacing: .14em; margin-top: 5px; color: var(--accent); }
+.sidebar .brand .brand-swap { color: rgba(255,255,255,.4); font-size: 15px; flex-shrink: 0; }
+.sidebar .brand:hover .brand-swap { color: #fff; }
+
+.nav-group { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.34); padding: 15px 12px 6px; font-weight: 700; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 11px;
+  color: rgba(255,255,255,.72); cursor: pointer; font-weight: 500; font-size: 13.5px; transition: .15s; position: relative;
+}
+.nav-item .ni { width: 20px; text-align: center; font-size: 16px; }
+.nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+.nav-item.active { background: var(--brand-grad); color: var(--on-primary, #fff); box-shadow: var(--glow); }
+
+/* Sidebar footer: signed-in user + the group signature */
+.side-foot { margin-top: auto; padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.side-user {
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  background: rgba(255,255,255,.05); border-radius: var(--r-sm);
+}
+.side-user .avatar { width: 34px; height: 34px; font-size: 12px; }
+.side-user .su-name { color: #fff; font-weight: 600; font-size: 13px; }
+.side-user .su-role { color: rgba(255,255,255,.5); }
+.side-user .icon-btn.plain { background: transparent; border: none; color: rgba(255,255,255,.5); width: 30px; height: 30px; }
+.side-user .icon-btn.plain:hover { background: rgba(255,255,255,.1); color: #fff; }
+.side-mtx {
+  display: flex; align-items: center; gap: 8px; padding: 0 4px;
+  font-size: 10.5px; letter-spacing: .06em; color: rgba(255,255,255,.34);
+}
+.side-mtx img { width: 16px; height: 16px; opacity: .7; }
+
+/* Drawer-only utilities — on desktop these same actions sit in the top bar,
+   so they stay hidden until the top bar drops them at the mobile breakpoint. */
+.side-tools { display: none; flex-direction: column; gap: 4px; }
+.side-tool {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 11px 12px; border: none; border-radius: 11px; background: transparent;
+  color: rgba(255,255,255,.72); font: inherit; font-size: 13.5px; font-weight: 500;
+  text-align: inherit; cursor: pointer; transition: .15s;
+}
+.side-tool span { width: 20px; text-align: center; font-size: 15px; }
+.side-tool:hover { background: rgba(255,255,255,.07); color: #fff; }
+@media (max-width: 860px) {
+  .side-tools { display: flex; }
+}
+.nav-item .tag { margin-left: auto; font-size: 10px; background: var(--red); color: #fff; padding: 1px 7px; border-radius: 999px; font-weight: 700; }
+[dir="rtl"] .nav-item .tag { margin-left: 0; margin-right: auto; }
+
+.main { display: flex; flex-direction: column; min-width: 0; height: 100%; overflow-y: auto; }
+.topbar {
+  height: var(--topbar-h); background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px; padding: 0 22px; position: sticky; top: 0; z-index: 20;
+}
+.topbar .page-title { font-size: 18px; font-weight: 700; }
+.topbar .search {
+  flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-full); padding: 8px 14px;
+}
+.topbar .search input { border: none; background: transparent; outline: none; width: 100%; }
+.content { padding: 24px; flex: 1; }
+.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 14px; flex-wrap: wrap; }
+.page-head h1 { font-size: 22px; }
+.page-head .sub { color: var(--text-2); font-size: 13px; margin-top: 2px; }
+
+.menu-toggle { display: none; }
+
+/* Online/offline chip */
+.status-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: var(--r-full);
+  font-size: 12px; font-weight: 700; background: rgba(34,197,94,.14); color: #16a34a; cursor: pointer;
+}
+.status-chip.offline { background: rgba(224,129,60,.18); color: #b45f16; }
+.status-chip .dot { background: currentColor; }
+
+/* Which shop's books am I in? Always visible in the top bar. */
+.store-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: var(--r-full);
+  font-size: 12px; font-weight: 600; letter-spacing: .02em; white-space: nowrap;
+  background: var(--primary-soft); color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-grad); color: var(--on-primary, #fff); display:grid; place-items:center; font-weight:700; }
+
+/* Language dropdown (top-bar globe button) */
+.lang-menu {
+  position: fixed; z-index: 150; width: 170px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow-lg);
+  padding: 6px; animation: slideIn .15s ease;
+}
+.lang-opt {
+  padding: 10px 12px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 13.5px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.lang-opt:hover { background: var(--surface-3); }
+.lang-opt.active { color: var(--primary); background: var(--primary-soft); }
+
+/* ------------------------------ Charts ------------------------------ */
+.chart { width: 100%; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr 60px; align-items: center; gap: 12px; margin: 9px 0; font-size: 13px; }
+.bar-track { height: 10px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--brand-grad); border-radius: 999px; }
+
+/* ------------------------------ POS ------------------------------ */
+/* Same as above: keep the column definition; RTL flips placement so the
+   cart lands on the left and the product grid keeps the 1fr. */
+.pos { display: grid; grid-template-columns: 1fr 400px; gap: 0; height: calc(100vh - var(--topbar-h)); }
+.pos-left { padding: 18px; overflow-y: auto; }
+.pos-right { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+[dir="rtl"] .pos-right { border-left: none; border-right: 1px solid var(--border); }
+.cat-chips { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 12px; }
+.chip {
+  padding: 9px 15px; border-radius: var(--r-full); background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer; font-weight: 600; font-size: 13px; white-space: nowrap; transition: .15s;
+}
+.chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.chip.sm { padding: 6px 12px; font-size: 12px; }
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 6px; }
+.prod-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 12px;
+  cursor: pointer; transition: .15s; display: flex; flex-direction: column; gap: 8px; min-height: 120px;
+}
+.prod-card:hover { border-color: var(--primary); box-shadow: var(--shadow); transform: translateY(-2px); }
+.prod-card .thumb { height: 56px; border-radius: 10px; background: var(--primary-soft); display: grid; place-items: center; font-size: 26px; }
+.prod-card .name { font-weight: 600; font-size: 13px; line-height: 1.25; }
+.prod-card .price { font-weight: 800; color: var(--primary); }
+.prod-card .stk { font-size: 11px; color: var(--text-3); margin-top: auto; }
+
+.cart-head { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.cart-items { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.cart-row { display: flex; align-items: center; gap: 10px; padding: 10px 6px; border-bottom: 1px dashed var(--border); }
+.cart-row .ci-name { flex: 1; font-weight: 600; font-size: 13px; }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--r-full); overflow: hidden; }
+.qty button { width: 28px; height: 28px; border: none; background: var(--surface-3); cursor: pointer; font-weight: 700; }
+.qty span { min-width: 30px; text-align: center; font-weight: 700; }
+.cart-foot { padding: 16px 18px; border-top: 1px solid var(--border); background: var(--surface-2); }
+.pay-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.pay-chip {
+  padding: 8px 2px; border: 1.5px solid var(--border); border-radius: 9px; background: var(--surface);
+  text-align: center; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: .15s; -webkit-user-select: none; user-select: none;
+}
+.pay-chip:hover { border-color: var(--primary); }
+.pay-chip.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.sum-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 13.5px; }
+.sum-row.total { font-size: 20px; font-weight: 800; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.empty-cart { text-align: center; color: var(--text-3); padding: 60px 20px; }
+
+/* Per-line discount affordances in the cart */
+.cart-row.has-disc { background: rgba(37,99,235,.05); border-radius: 8px; }
+.cart-row .ci-amt s { display: inline-block; opacity: .7; }
+.disc-tag { display: inline-block; margin-left: 6px; font-size: 10.5px; font-weight: 700; color: var(--red);
+  background: rgba(239,68,68,.12); border-radius: 999px; padding: 1px 7px; vertical-align: middle; }
+
+/* Inline discount editor: [ number ][ $ / % ] */
+.disc-edit { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; height: 30px; }
+.disc-edit .disc-in { width: 40px; border: none; outline: none; background: transparent; text-align: right; padding: 0 4px; font-size: 13px; color: var(--text); -moz-appearance: textfield; appearance: textfield; }
+.disc-edit .disc-in::-webkit-outer-spin-button, .disc-edit .disc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.disc-edit .disc-in::placeholder { color: var(--text-3); }
+.disc-edit .disc-unit { width: 26px; height: 100%; border: none; border-left: 1px solid var(--border); background: var(--surface-3); cursor: pointer; font-weight: 800; font-size: 13px; color: var(--text-2); }
+.disc-edit .disc-unit:hover { background: var(--primary-soft); color: var(--primary); }
+.cart-row.has-disc .disc-edit { border-color: var(--red); }
+.cart-row.has-disc .disc-edit .disc-unit { background: rgba(239,68,68,.12); color: var(--red); border-color: rgba(239,68,68,.35); }
+
+/* Segmented amount / percent toggle (discount dialog) */
+.seg { display: flex; gap: 4px; background: var(--surface-3); border-radius: var(--r-full); padding: 4px; }
+.seg-btn { flex: 1; border: none; background: transparent; padding: 9px 12px; border-radius: var(--r-full);
+  font-weight: 700; font-size: 13px; color: var(--text-2); cursor: pointer; transition: .15s; }
+.seg-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.12)); }
+
+/* ------------------------------ Modal ------------------------------ */
+.overlay {
+  position: fixed; inset: 0; background: rgba(28,25,22,.55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  display: grid; place-items: center; z-index: 100; padding: 20px;
+}
+.modal {
+  background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border);
+}
+.modal.wide { max-width: 760px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+.modal-head h3 { font-size: 17px; }
+.modal-body { padding: 22px; }
+.modal-foot { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ------------------------------ Toast ------------------------------ */
+.toasts { position: fixed; bottom: 22px; right: 22px; display: flex; flex-direction: column; gap: 10px; z-index: 200; }
+[dir="rtl"] .toasts { right: auto; left: 22px; }
+.toast {
+  background: var(--navy); color: #fff; padding: 13px 18px; border-radius: var(--r); box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13.5px; animation: slideIn .25s ease;
+  border-left: 4px solid var(--green); min-width: 240px;
+}
+.toast.err { border-left-color: var(--red); }
+.toast.warn { border-left-color: var(--orange); }
+.toast.info { border-left-color: var(--cyan); }
+@keyframes slideIn { from { transform: translateY(14px); opacity: 0; } }
+
+/* ------------------------------ Splash ------------------------------ */
+.splash {
+  position: fixed; inset: 0; background: var(--hero-grad); display: grid; place-items: center; z-index: 500;
+  color: #fff; transition: opacity .5s; text-align: center;
+}
+.splash .mtx-badge { --badge-size: 104px; margin: 0 auto; animation: pop .6s ease; }
+@keyframes pop { from { transform: scale(.7); opacity: 0; } }
+.splash h1 { font-family: var(--font-display); font-weight: 400; font-size: 46px; margin-top: 26px; letter-spacing: .02em; }
+.splash p { color: rgba(255,255,255,.45); margin-top: 12px; font-size: 11px; font-weight: 600; letter-spacing: .24em; }
+.splash .splash-note { margin-top: 22px; font-size: 12px; letter-spacing: normal; font-weight: 400; color: rgba(255,255,255,.35); }
+.splash .loader { width: 180px; height: 3px; background: rgba(255,255,255,.12); border-radius: 999px; margin: 26px auto 0; overflow: hidden; }
+.splash .loader i { display: block; height: 100%; width: 40%; background: linear-gradient(90deg, #8A7B63, #C9A227); border-radius: 999px; animation: load 1.4s ease infinite; }
+@keyframes load { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+
+/* --------------------------- Store picker ---------------------------
+   The first screen. Two doors, each into a completely separate business.
+   Every card carries its own house colour via --sc / --sc2 / --sc-soft,
+   set inline from the store registry. */
+.picker {
+  min-height: 100vh; background: var(--bg); display: flex; flex-direction: column;
+  padding: 28px clamp(20px, 5vw, 64px) 24px;
+}
+.picker-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.picker-body {
+  flex: 1; display: flex; flex-direction: column; justify-content: center;
+  max-width: 1080px; width: 100%; margin: 0 auto; padding: 40px 0;
+}
+.picker-head { text-align: center; margin-bottom: clamp(28px, 5vh, 52px); }
+.picker-head .eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 18px;
+}
+.picker-head h1 {
+  font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 4.4vw, 50px);
+  line-height: 1.15; letter-spacing: .005em; color: var(--text);
+}
+
+.store-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: clamp(18px, 2.5vw, 28px); }
+
+.store-card {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; flex-direction: column; gap: 22px; text-align: inherit;
+  padding: 30px 28px 24px; border-radius: var(--r-xl);
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm); cursor: pointer; font: inherit; color: inherit;
+  transition: transform .22s cubic-bezier(.2,.7,.3,1), box-shadow .22s, border-color .22s;
+}
+.store-card::before {                 /* the house colour, as a top edge */
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 4px;
+  background: linear-gradient(90deg, var(--sc), var(--sc2));
+}
+.store-card .sc-glow {                /* soft wash that blooms on hover */
+  position: absolute; inset: -40% -20% auto -20%; height: 75%; z-index: -1;
+  background: radial-gradient(60% 70% at 50% 0%, var(--sc-soft) 0%, transparent 70%);
+  opacity: 0; transition: opacity .3s;
+}
+.store-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--sc); }
+.store-card:hover .sc-glow { opacity: 1; }
+.store-card:focus-visible { outline: none; border-color: var(--sc); box-shadow: 0 0 0 3px var(--sc-soft), var(--shadow-lg); }
+.store-card.picked { transform: scale(.975); box-shadow: var(--shadow-sm); }
+
+.store-card .sc-logo {
+  height: 132px; border-radius: var(--r-lg); background: #fff; padding: 18px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+}
+.store-card .sc-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.store-card .sc-body { display: flex; flex-direction: column; }
+.store-card .sc-tag {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--sc);
+}
+.store-card .sc-name {
+  font-family: var(--font-display); font-weight: 400; font-size: 30px;
+  letter-spacing: .01em; margin-top: 10px; color: var(--text);
+}
+.store-card .sc-blurb { margin-top: 10px; font-size: 13.5px; line-height: 1.65; color: var(--text-2); }
+.store-card .sc-go {
+  margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 600; color: var(--sc);
+}
+.store-card .sc-go i { font-style: normal; transition: transform .2s; }
+.store-card:hover .sc-go i { transform: translateX(4px); }
+[dir="rtl"] .store-card:hover .sc-go i { transform: translateX(-4px); }
+
+/* ------------------------------ Login ------------------------------ */
+.login { min-height: 100vh; display: flex; background: var(--bg); }
+.login .hero {
+  flex: 1.05; position: relative; background: var(--hero-grad); color: #fff;
+  padding: 40px clamp(32px, 4vw, 56px) 44px; display: flex; flex-direction: column; overflow: hidden;
+}
+.login .hero::after {                 /* the store's colour, washed in behind */
+  content: ''; position: absolute; inset: auto -10% -30% -10%; height: 60%;
+  background: radial-gradient(50% 70% at 30% 100%, var(--primary) 0%, transparent 72%);
+  opacity: .28; pointer-events: none;
+}
+.login .hero > * { position: relative; z-index: 1; }
+/* Top strip: the way back on the left, the group signature on the right. */
+.login .hero .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.login .hero .back-link {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+  color: rgba(255,255,255,.8); padding: 8px 14px; border-radius: var(--r-full);
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: .15s;
+}
+.login .hero .back-link:hover { background: rgba(255,255,255,.14); color: #fff; }
+.login .hero .hero-mtx {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 600; letter-spacing: .2em; color: rgba(255,255,255,.34);
+}
+.login .hero .hero-mtx img { width: 15px; height: 15px; opacity: .55; }
+
+/* The body is vertically centred between the strips, so the panel reads as
+   one composition rather than a stack pinned to the top. */
+.login .hero .hero-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 0; }
+
+.login .hero .hero-lockup { display: flex; align-items: center; gap: 18px; }
+.login .hero .hero-logo {
+  width: 116px; height: 88px; flex-shrink: 0; background: #fff; border-radius: var(--r);
+  padding: 11px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 16px 40px -18px rgba(0,0,0,.7);
+}
+.login .hero .hero-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.login .hero .wordmark { font-size: 30px; color: #fff; }
+.login .hero .wordmark-sub { color: var(--accent); margin-top: 8px; }
+
+.login .hero .tagline {
+  margin-top: 40px; font-family: var(--font-display); font-size: clamp(25px, 2.9vw, 36px); font-weight: 400;
+  color: #fff; line-height: 1.3; letter-spacing: .005em; max-width: 520px;
+}
+.login .hero .tagline span { color: var(--accent); }
+
+.login .hero .feats { margin-top: 40px; display: flex; flex-direction: column; gap: 13px; max-width: 460px; }
+.login .hero .feat { display: flex; align-items: center; gap: 14px; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.8); }
+.login .hero .feat .fi {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: color-mix(in srgb, var(--primary) 30%, rgba(255,255,255,.06));
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  display: grid; place-items: center; flex-shrink: 0; font-size: 15px;
+}
+.login .hero .hero-foot {
+  padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-size: 11.5px; letter-spacing: .06em; color: rgba(255,255,255,.42);
+}
+.login .hero .hero-foot .hf-dot {
+  width: 3px; height: 3px; border-radius: 50%; background: var(--accent); opacity: .7;
+}
+
+.login .panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px; }
+.login .panel .box { width: 100%; max-width: 420px; }
+
+/* Mobile-only brand block inside the sign-in panel. On desktop the hero
+   already shows the logo and the way back, so this stays hidden. */
+.login-brand-m { display: none; margin-bottom: 26px; }
+.login-brand-m .back-link {
+  background: var(--surface-3); border: 1px solid var(--border); color: var(--text-2);
+  padding: 8px 14px; border-radius: var(--r-full); font: inherit; font-size: 12.5px;
+  font-weight: 600; cursor: pointer; transition: .15s;
+}
+.login-brand-m .back-link:hover { background: var(--border); color: var(--text); }
+.login-brand-m .lbm-logo {
+  margin-top: 20px; width: 132px; height: 92px; background: #fff; border-radius: var(--r-lg);
+  padding: 12px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.login-brand-m .lbm-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.login-brand-m .lbm-name { margin-top: 16px; font-family: var(--font-display); font-size: 26px; color: var(--text); }
+.login-brand-m .lbm-tag {
+  margin-top: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--primary);
+}
+@media (max-width: 860px) {
+  .login-brand-m { display: block; }
+}
+.login .panel h2 { font-family: var(--font-display); font-weight: 400; font-size: 34px; letter-spacing: .01em; }
+.login .panel .lead { font-size: 15px; color: var(--text-2); margin-top: 8px; }
+.login .panel .field > label, .form-label {
+  font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: .08em;
+}
+.user-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 28px; }
+.user-card {
+  border-radius: var(--r-sm); border: 1.5px solid var(--border); background: var(--surface);
+  padding: 16px; cursor: pointer; transition: .15s;
+}
+.user-card:hover { border-color: var(--primary); }
+.user-card .u-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.user-card .u-role { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.user-card.active { background: var(--primary-soft); border-color: var(--primary); }
+.user-card.active .u-name { color: var(--primary); }
+
+/* Segmented picker (settings: theme / language / payment method) */
+.role-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.role-btn {
+  padding: 12px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface);
+  cursor: pointer; font-weight: 700; text-align: center; font-size: 13px; transition: .15s;
+}
+.role-btn:hover { border-color: var(--primary); }
+.role-btn.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+
+/* Receipt */
+.receipt {
+  width: 300px; background: #fff; color: #111; margin: 0 auto; padding: 18px; font-family: 'Courier New', monospace;
+  font-size: 12px; font-weight: 700; box-shadow: var(--shadow); border-radius: 6px;
+}
+.receipt .r-center { text-align: center; }
+.receipt .receipt-logo { display: block; max-width: 150px; max-height: 70px; margin: 0 auto 6px; object-fit: contain; }
+.receipt hr { border: none; border-top: 1px dashed #999; margin: 8px 0; }
+.receipt table { width: 100%; font-size: 11px; }
+.receipt .r-total { font-size: 15px; font-weight: bold; }
+
+/* Progress ring / misc */
+.kv { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.kv:last-child { border-bottom: none; }
+.kv .k { color: var(--text-2); }
+.kv .v { font-weight: 700; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; overflow-x: auto; }
+.tab { padding: 11px 16px; cursor: pointer; font-weight: 600; color: var(--text-2); border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.list-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.list-item:last-child { border: none; }
+.thumb-sm { width: 42px; height: 42px; border-radius: 10px; background: var(--primary-soft); display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+
+.progress { height: 8px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--brand-grad); }
+
+/* ------------------------------ Responsive ------------------------------
+   The shop owner reads his reports on a phone, so every module — not just the
+   POS — has to survive a 360px screen. Three things make that work:
+
+   1. min-width:0 below. Grid and flex children default to `min-width:auto`,
+      which means a wide table REFUSES to shrink and instead stretches its
+      card past the edge of the screen — where .app's overflow:hidden simply
+      clips the far columns off. Letting these boxes shrink is what finally
+      hands the overflow to .table-wrap, which can scroll.
+   2. Single-column grids below 860px, forced with !important because the
+      views declare their columns as inline styles.
+   3. A trimmed top bar, with the controls it drops moved into the drawer.
+   ------------------------------------------------------------------------ */
+.main, .content, .grid > *, .card, .stat, .table-wrap { min-width: 0; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+/* Long single words (emails, SKUs, product names) must not push a card wide */
+.card, .stat, .list-item, .kv { overflow-wrap: anywhere; }
+
+@media (max-width: 1100px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .pos { grid-template-columns: 1fr; height: auto; }
+  .pos-right { position: fixed; inset: 0; z-index: 60; display: none; border-left: none; }
+  .pos-right.open { display: flex; }
+}
+
+@media (max-width: 860px) {
+  :root { --sidebar-w: 0px; }
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: min(280px, 86vw); z-index: 90;
+    transform: translateX(-100%); transition: transform .25s;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+  [dir="rtl"] .sidebar { left: auto; right: 0; transform: translateX(100%); }
+  .sidebar.open { transform: translateX(0); }
+  .menu-toggle { display: inline-flex; }
+
+  /* Every multi-column layout becomes one column. Views set their columns
+     inline (grid-template-columns:1fr 1fr and friends), so this must win. */
+  .grid { grid-template-columns: 1fr !important; gap: 14px; }
+  .form-grid { grid-template-columns: 1fr; }
+
+  /* Top bar keeps only what you need at a glance. Theme, language, switch
+     store and sign out move into the drawer (see .side-tools). */
+  .topbar { gap: 10px; padding: 0 14px; }
+  .topbar .search,
+  .topbar #langBtn, .topbar #themeBtn, .topbar #storeBtn,
+  .topbar #installBtn, .topbar #logoutBtn { display: none; }
+  .topbar .page-title { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .store-chip { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar .status-chip { margin-left: auto; }
+  [dir="rtl"] .topbar .status-chip { margin-left: 0; margin-right: auto; }
+
+  /* Toolbars stack instead of running off the edge */
+  .page-head, .card-head, .content .row { flex-wrap: wrap; }
+  .card-head { gap: 10px; }
+
+  .login { flex-direction: column; }
+  .login .hero { display: none; }
+  .login .panel { padding: 32px 24px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 560px) {
+  .content { padding: 14px; }
+  .page-head h1 { font-size: 20px; }
+  .card { padding: 16px; }
+
+  /* Two KPI tiles across still fits and halves the scrolling — the owner
+     sees today's takings and profit together without swiping. */
+  .stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { padding: 14px; }
+  .stat .value { font-size: 21px; }
+  .stat .label { font-size: 11.5px; }
+  .stat .ico { width: 34px; height: 34px; font-size: 16px; }
+
+  /* A stacked toolbar reads better as full-width buttons than as a ragged
+     row of half-width ones. */
+  .page-head .row { width: 100%; gap: 8px; }
+  .page-head .row > .btn { flex: 1 1 auto; }
+  .row > .input, .row > .select { min-width: 0; }
+
+  .tbl th, .tbl td { padding: 10px 12px; font-size: 12.5px; }
+  .seg-btn { padding: 8px 10px; font-size: 12px; }
+  .chip { padding: 7px 12px; font-size: 12.5px; }
+  .modal-box { width: 100%; max-height: 92vh; }
+
+  /* Touch targets: 40px is the smallest comfortable tap area. */
+  .btn { min-height: 40px; }
+  .icon-btn { width: 38px; height: 38px; }
+  .nav-item { padding: 12px; font-size: 14px; }
+}
+
+/* Narrow phones (iPhone SE / mini class, 360–375px). The store name is the
+   one thing that must never be dropped — with two shops in one app, a report
+   without a store name on it is worse than no report. The page title yields
+   its space instead. */
+@media (max-width: 400px) {
+  .topbar { gap: 8px; padding: 0 12px; }
+  .topbar .page-title { font-size: 15px; min-width: 0; flex-shrink: 1; }
+  .topbar .store-chip { padding: 5px 10px; font-size: 11px; max-width: 40vw; }
+  .topbar .status-chip { padding: 5px 9px; font-size: 11px; }
+}
+
+@media (max-width: 340px) {
+  .stats { grid-template-columns: 1fr; }
+}
+
+/* Notched phones: keep content clear of the home indicator and the cutout. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .content { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .pos-right { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Coarse pointers get roomier rows regardless of screen size (tablets at
+   the counter, phones in the office). */
+@media (pointer: coarse) {
+  .nav-item { padding: 12px; }
+  .user-card, .role-btn { padding: 15px; }
+  .cart-row { padding: 12px 6px; }
+}
+
+/* Backdrop for mobile sidebar */
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 80; display: none; }
+.backdrop.show { display: block; }
+
+/* Off-screen holder for the auto-printed receipt */
+#printArea { display: none; }
+
+@media print {
+  /* Default print mode: reports, barcode label sheets, A4 invoices */
+  .sidebar, .topbar, .no-print { display: none !important; }
+  .app { display: block; height: auto; overflow: visible; }
+  .main { height: auto; overflow: visible; }
+  body { background: #fff; }
+
+  /* Receipt mode: print ONLY the receipt, on 80mm thermal roll.
+     `print-receipt` is toggled on <body> by printReceipt() in views-core.js. */
+  body.print-receipt > *:not(#printArea) { display: none !important; }
+  body.print-receipt #printArea { display: block !important; }
+  body.print-receipt { margin: 0; padding: 0; }
+  body.print-receipt .receipt {
+    width: 72mm; margin: 0; padding: 2mm 0; box-shadow: none; border-radius: 0;
+    font-size: 11px; color: #000; background: #fff;
+  }
+
+  /* Label mode: print ONLY the sticker labels, one per physical label.
+     `print-labels` is toggled on <body> by printLabels() in views-ops.js;
+     a dynamic @page rule sets the exact sticker size. */
+  body.print-labels > *:not(#printArea) { display: none !important; }
+  body.print-labels #printArea { display: block !important; }
+  body.print-labels { margin: 0; padding: 0; background: #fff; }
+  body.print-labels #printArea .plabel {
+    box-sizing: border-box; overflow: hidden; page-break-after: always; break-after: page;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 1mm; text-align: center; color: #000;
+  }
+  body.print-labels #printArea .plabel:last-child { page-break-after: auto; }
+  body.print-labels #printArea .plabel .pl-name {
+    font-size: 7pt; font-weight: 700; line-height: 1.05; width: 100%;
+    max-height: 2.3em; overflow: hidden;
+  }
+  body.print-labels #printArea .plabel svg { width: 96%; height: auto; }
+  body.print-labels #printArea .plabel .pl-price { font-size: 9pt; font-weight: 800; margin-top: .4mm; }
+}
+/* Thermal roll: no page margins, continuous length */
+@page { margin: 6mm; }
+
+/* Scan-or-search picker (exchange dialog) */
+.scan-box {
+  display: flex; gap: 8px; align-items: center; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px; padding: 10px 14px;
+}
+.scan-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 14px; color: var(--text); }
+.scan-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.scan-results { max-height: 210px; overflow-y: auto; margin-top: 6px; }
+.scan-results .list-item:hover { background: var(--primary-soft); border-radius: 10px; }
+.list-item.picked { background: var(--primary-soft); border-radius: 10px; border: 1px solid var(--primary); }
+
+/* Clickable category tile (Categories screen) */
+.cat-card { cursor: pointer; transition: transform .12s, border-color .12s, box-shadow .12s; }
+.cat-card:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: var(--shadow); }
+
+/* Store-wide sale banner (POS) */
+.campaign-bar {
+  background: linear-gradient(90deg, rgba(34,197,94,.16), rgba(34,197,94,.06));
+  border: 1px solid rgba(34,197,94,.35); color: #15803d;
+  border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 13.5px;
+}
+.prod-card .price s { font-weight: 500; margin-right: 4px; }
+
+/* On-screen label preview card (Barcode screen) */
+.lbl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+.lbl-card svg { margin: 4px 0; }
+
+/* ===================================================================
+   Cat POS — category-amount till (calculator · cart · category grid)
+   =================================================================== */
+.catpos { display: grid; grid-template-columns: 340px minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
+.catpos .cp-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* calculator */
+.cp-step { width: 78px; text-align: center; padding: 6px 8px; }
+.cp-pad-display {
+  background: var(--surface-3); border-radius: var(--r); padding: 20px 18px;
+  text-align: right; font-weight: 800; font-size: 30px; line-height: 1;
+  color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+[dir="rtl"] .cp-pad-display { text-align: left; }
+.cp-pad-display.muted { color: var(--text-3); }
+.cp-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.cp-key {
+  border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-full);
+  padding: 16px 0; font-size: 20px; font-weight: 700; color: var(--text); cursor: pointer;
+  font-family: var(--font-num); transition: background .12s, border-color .12s, color .12s, transform .06s;
+}
+.cp-key:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.cp-key:active { transform: translateY(1px); }
+.cp-key.zero { grid-column: span 2; }
+.cp-key.back { color: var(--red); font-size: 18px; }
+.cp-x { margin-top: 12px; padding: 16px 0; font-size: 16px; letter-spacing: 2px; }
+.cp-hint { font-size: 11.5px; color: var(--text-3); text-align: center; margin-top: 10px; line-height: 1.55; }
+
+/* category grid */
+.cp-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; }
+.cp-cat {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-lg);
+  padding: 18px 12px; cursor: pointer; text-align: center; min-width: 0;
+  transition: border-color .12s, box-shadow .12s, background .12s, transform .08s;
+}
+.cp-cat:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+.cp-cat.active { border-color: var(--primary); background: var(--primary-soft); box-shadow: var(--ring); }
+.cp-cat .cp-cat-ico {
+  width: 46px; height: 46px; margin-bottom: 6px; border-radius: 50%;
+  background: var(--primary-soft); display: grid; place-items: center; font-size: 22px;
+}
+.cp-cat.active .cp-cat-ico { background: var(--surface); }
+.cp-cat .cp-cat-name { font-weight: 700; font-size: 13.5px; line-height: 1.25; overflow-wrap: anywhere; }
+.cp-cat .cp-cat-sold { font-size: 11.5px; color: var(--text-3); }
+
+/* cart */
+.cp-cart-items { padding: 4px 18px 14px; min-height: 96px; }
+.cp-empty { padding: 26px 0; text-align: center; }
+.cp-line { display: flex; align-items: flex-start; gap: 10px; padding: 12px 2px; border-bottom: 1px dashed var(--border); }
+.cp-line:last-child { border-bottom: none; }
+.cp-line.has-disc { background: rgba(215, 68, 62, .05); border-radius: 8px; }
+.cp-line-main { flex: 1; min-width: 0; }
+.cp-line-name { font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+.cp-line-sub { font-size: 11.5px; color: var(--text-3); margin-top: 1px; }
+.cp-line-amt { text-align: right; white-space: nowrap; font-size: 13.5px; min-width: 76px; }
+.cp-line-amt s { font-weight: 500; opacity: .6; font-size: 11.5px; }
+.cp-rm { border: none; background: transparent; cursor: pointer; font-size: 14px; color: var(--text-3); padding: 2px 4px; line-height: 1; }
+.cp-rm:hover { color: var(--red); }
+
+/* invoice-level discount field */
+.cp-disc-field { display: flex; align-items: stretch; border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; max-width: 190px; }
+.cp-disc-field input {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  padding: 9px 12px; text-align: right; font-family: var(--font-num); color: var(--text);
+  -moz-appearance: textfield; appearance: textfield;
+}
+.cp-disc-field input::-webkit-outer-spin-button, .cp-disc-field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.cp-unit {
+  border: none; border-left: 1px solid var(--border); background: var(--surface-3);
+  padding: 0 14px; font-weight: 800; cursor: pointer; color: var(--text-2);
+}
+[dir="rtl"] .cp-unit { border-left: none; border-right: 1px solid var(--border); }
+.cp-unit:hover { background: var(--primary-soft); color: var(--primary); }
+
+@media (max-width: 1100px) {
+  .catpos { grid-template-columns: 1fr; }
+}

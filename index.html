@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+  <title>MTX Group — Retail Suite</title>
+  <meta name="description" content="MTX Group Retail Suite — offline-first Point of Sale, inventory and business management for Melora and Bangeen Crystal. Each store, its own books.">
+  <meta name="theme-color" content="#1C1916">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="assets/mtx-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- Marcellus (display) + Inter (body) enhance when online; both fall back to
+       system serif/sans so typography degrades gracefully offline. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Splash -->
+  <div class="splash" id="splash">
+    <div>
+      <div class="mtx-badge"><img src="assets/mtx-mark.svg" alt="MTX Group"></div>
+      <h1>MTX Group</h1>
+      <p>RETAIL SUITE</p>
+      <div class="loader"><i></i></div>
+      <p class="splash-note">Two houses. One system. Always online with itself.</p>
+    </div>
+  </div>
+
+  <!-- Store picker — the first screen: choose which shop you're working in -->
+  <div id="picker" class="hide"></div>
+
+  <!-- Login (rendered by app.js, per store) -->
+  <div id="login" class="hide"></div>
+
+  <!-- Main app shell (rendered by app.js) -->
+  <div id="app" class="app hide"></div>
+
+  <!-- Receipts are rendered here and printed on their own; hidden on screen -->
+  <div id="printArea"></div>
+
+  <!-- Scripts (order matters; cached by the service worker) -->
+  <script src="js/db.js"></script>
+  <script src="js/stores.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/xlsx.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/seed.js"></script>
+
+  <script src="js/views-core.js"></script>
+  <script src="js/views-catpos.js"></script>
+  <script src="js/views-ops.js"></script>
+  <script src="js/views-finance.js"></script>
+  <script src="js/views-admin.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

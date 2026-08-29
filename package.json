@@ -1,0 +1,46 @@
+{
+  "name": "mtx-group-pos",
+  "productName": "MTX Group Retail Suite",
+  "version": "1.0.0",
+  "description": "MTX Group Retail Suite — offline-first Point of Sale & business management. One install, two independent stores (Melora and Bangeen Crystal), each with its own database.",
+  "author": "MTX Group",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node server.js",
+    "dist": "electron-builder --win",
+    "release": "electron-builder --win --publish always"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "build": {
+    "appId": "com.mtxgroup.pos",
+    "productName": "MTX Group Retail Suite",
+    "files": [
+      "electron/**",
+      "index.html",
+      "manifest.webmanifest",
+      "service-worker.js",
+      "css/**",
+      "js/**",
+      "assets/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MTX Group Retail Suite"
+    }
+  }
+}

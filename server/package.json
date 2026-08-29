@@ -1,0 +1,31 @@
+{
+  "name": "mtx-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MTX Group Retail Suite — online sync server. One PostgreSQL database per store; the browser/Electron app keeps a local copy and syncs to this.",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "setup": "node src/setup.js",
+    "import": "node src/import.js",
+    "dev": "node --watch src/index.js",
+    "smoke": "node test/smoke.js",
+    "test": "node test/smoke.js && node test/sync.test.js && node test/http.test.js && node test/client-sync.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.5",
+    "pg-mem": "^3.0.14"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "MTX Group — Retail Suite",
+  "short_name": "MTX Suite",
+  "description": "Offline-first Point of Sale, inventory and business management for the MTX Group stores. Each store keeps its own catalogue, staff, books and reports.",
+  "id": "/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1C1916",
+  "theme_color": "#1C1916",
+  "lang": "en",
+  "dir": "auto",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/mtx-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Choose store", "short_name": "Stores", "url": "./index.html" },
+    { "name": "New Sale", "short_name": "POS", "url": "./index.html#/pos" },
+    { "name": "Dashboard", "short_name": "Dashboard", "url": "./index.html#/dashboard" }
+  ]
+}

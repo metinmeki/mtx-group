@@ -1,0 +1,29 @@
+# Local PostgreSQL for development and testing.
+#
+#   docker compose up -d          # start Postgres on localhost:5432
+#   cp .env.example .env          # then set PGUSER=mtx PGPASSWORD=mtx
+#   npm install && npm run setup  # create the per-store databases
+#   npm start
+#
+# For production the partner can use this same compose file, a managed
+# PostgreSQL (RDS / Neon / Supabase / DigitalOcean), or a system package.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mtx
+      POSTGRES_PASSWORD: mtx
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - mtx_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mtx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mtx_pgdata:

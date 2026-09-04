@@ -69,6 +69,18 @@ function createApp() {
     res.json(await sync.push(req.store, (req.body && req.body.changes) || []));
   }));
 
+  /* Erase every record in this store, on the server and (via tombstones in the
+     change feed) on every terminal that syncs. Super Admin only, and the body
+     must carry the store id as a typed confirmation so it cannot fire by
+     accident or from a stray request. Staff accounts and settings survive —
+     see sync.eraseData. */
+  app.post('/api/erase', auth.requireRole('Super Admin'), wrap(async (req, res) => {
+    if (!req.body || req.body.confirm !== req.store) {
+      return res.status(400).json({ error: `confirm must equal "${req.store}"` });
+    }
+    res.json(await sync.eraseData(req.store));
+  }));
+
   app.get('/api/users', auth.requireRole('Super Admin', 'Admin', 'Manager'), wrap(async (req, res) => {
     res.json({ users: await users.list(req.store) });
   }));

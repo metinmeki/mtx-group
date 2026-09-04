@@ -491,9 +491,29 @@ Views.backup = async (root) => {
   const counts = {};
   for (const s of DB.stores) counts[s] = (await DB.all(s)).length;
   const lastBackup = await DB.setting('lastBackup');
+  // Whole-system backups cover every store, so the timestamp is device-level
+  // rather than living inside one store's database.
+  const lastSysBackup = Number(App.prefs.get('lastSysBackup', 0)) || 0;
   root.innerHTML = `
     <div class="page-head"><div><h1>Backup & Restore</h1><div class="sub">Keep your business data safe — export, import, auto-backup</div></div>
       <span class="store-chip">${UI.esc(Tenant.get().name)}</span></div>
+
+    <div class="card" style="margin-bottom:18px;border:1.5px solid var(--primary)">
+      <div class="card-head"><h3>💾 Whole-system backup</h3>
+        <span class="badge blue">${STORES.map((s) => UI.esc(s.name)).join(' + ')}</span></div>
+      <p class="muted tiny">One file for the entire install — every store, not just the one you are signed into.
+        It holds products, sales, invoices, customers, suppliers, expenses, stock movements, staff and settings.
+        The dashboard and reports are rebuilt from that data, so they come back too.
+        <b>Restoring returns the system to exactly the state it was in when you made the file.</b></p>
+      <div class="row wrap" style="gap:10px;margin-top:14px">
+        <button class="btn primary" id="sysExport">⬇ Back up the whole system</button>
+        <input type="file" id="sysFile" accept=".json" class="input" style="width:auto;flex:1;min-width:200px">
+        <button class="btn warn" id="sysRestore">⬆ Restore whole system</button>
+      </div>
+      <div class="kv" style="margin-top:12px"><span class="k">Last whole-system backup</span>
+        <b class="v">${lastSysBackup ? UI.fmtDT(lastSysBackup) : 'Never'}</b></div>
+    </div>
+
     <div class="grid" style="grid-template-columns:1fr 1fr">
       <div class="card"><h3>📤 Export Backup</h3><p class="muted tiny">Download a complete snapshot of <b>${UI.esc(Tenant.get().name)}</b> only. The other store's data is in its own separate backup.</p>
         <div class="kv" style="margin-top:10px"><span class="k">Products</span><b class="v">${counts.products}</b></div>
@@ -514,7 +534,74 @@ Views.backup = async (root) => {
         <div class="kv" style="margin-top:10px"><span class="k">Last downloaded</span><b class="v">${lastBackup ? UI.fmtDT(lastBackup) : 'Never'}</b></div></div>
       <div class="card"><h3>🧪 Sample data</h3><p class="muted tiny">Load an example catalogue with 14 days of trading history — useful for testing or a demo. Only do this on an empty system.</p>
         <button class="btn ghost block" id="loadDemo" style="margin-top:12px">Load demo data</button></div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr;margin-top:18px">
+      <div class="card"><h3>↺ Catch-up sales from a stock count</h3>
+        <p class="muted tiny">A shop traded on a copy this system never saw? Give the product export from before that trading and one from after —
+          the difference is recorded as a catch-up invoice so the money reaches the books, and stock is brought down to the closing figures.
+          <b>Where the other copy's backup file still exists, restore that instead — it is exact and this is an estimate.</b></p>
+        <button class="btn ghost" id="catchUp" style="margin-top:12px">Compare two stock exports…</button></div>
     </div>`;
+
+  root.querySelector('#catchUp').onclick = () => catchUpModal(root);
+
+  /* ---- whole-system backup ---- */
+  const sysBtn = root.querySelector('#sysExport');
+  sysBtn.onclick = async () => {
+    sysBtn.disabled = true;
+    const label = sysBtn.textContent;
+    try {
+      const json = await DB.exportSystem((name) => { sysBtn.textContent = 'Reading ' + name + '…'; });
+      const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `mtx-system-backup-${UI.dayKey(Date.now())}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      App.prefs.set('lastSysBackup', String(Date.now()));
+      const n = Object.values(json.stores).reduce((t, b) => t + (b.data.sales || []).length, 0);
+      UI.toast(`Whole system backed up — ${Object.keys(json.stores).length} stores, ${n} invoices`);
+    } catch (e) {
+      UI.toast('Backup failed: ' + e.message, 'err');
+    } finally {
+      sysBtn.disabled = false; sysBtn.textContent = label;
+      Views.backup(root);
+    }
+  };
+
+  root.querySelector('#sysRestore').onclick = () => {
+    const f = root.querySelector('#sysFile').files[0];
+    if (!f) return UI.toast('Choose a whole-system backup file first', 'warn');
+    const reader = new FileReader();
+    reader.onload = () => {
+      let json;
+      try { json = JSON.parse(reader.result); } catch (e) { return UI.toast('Invalid backup file', 'err'); }
+      if (!json || json.meta?.kind !== 'system') {
+        return UI.toast('That is a single-store backup — use Restore Backup on the right', 'warn');
+      }
+      const names = Object.values(json.stores).map((b) => b.name || '?').join(' and ');
+      const when = json.meta.exportedAt ? UI.fmtDT(json.meta.exportedAt) : 'an unknown time';
+      UI.confirm(
+        `Put the whole system back to how it was on ${when}? This replaces ${names} completely — ` +
+        `every sale, product and customer recorded since then is erased. You are signed into ` +
+        `${Tenant.get().name}; you will be signed out afterwards.`,
+        async () => {
+          try {
+            const res = await DB.importSystem(json);
+            Store.bust();
+            let msg = 'Restored: ' + res.done.join(', ');
+            if (res.skipped.length) msg += ' · skipped unknown: ' + res.skipped.join(', ');
+            UI.toast(msg);
+            // Sign out: the restored file carries its own staff and PINs, and
+            // the signed-in user may no longer exist.
+            setTimeout(() => { App.user = null; Tenant.clear(); App.showPicker(); }, 1200);
+          } catch (e) {
+            UI.toast('Restore failed: ' + e.message, 'err');
+          }
+        }, { danger: true });
+    };
+    reader.readAsText(f);
+  };
 
   root.querySelector('#doExport').onclick = async () => {
     const data = await DB.exportAll();
@@ -552,12 +639,61 @@ Views.backup = async (root) => {
     };
     reader.readAsText(f);
   };
-  root.querySelector('#doWipe').onclick = () => UI.confirm(
-    'This permanently erases ALL products, sales, invoices, customers, suppliers and expenses. You will start from a completely empty system. Are you absolutely sure?',
-    async () => {
-      await DB.wipe(); await DB.setting('seeded', false); Store.bust();
-      UI.toast('Everything erased — starting empty', 'info'); location.reload();
-    }, { danger: true });
+  /* Erase everything for this store.
+
+     With sync on, clearing the browser alone achieves nothing: the wipe also
+     drops the sync cursor, so the next pull re-downloads the whole lot from
+     the server and the button looks broken. So when a server is connected the
+     server is erased FIRST (it tombstones the rows, which also clears every
+     other terminal), then the local copy, then the cursor is parked at the
+     server's head so nothing is pulled back. */
+  const wipeBtn = root.querySelector('#doWipe');
+  wipeBtn.onclick = () => {
+    const synced = window.Sync && Sync.configured();
+    const here = Tenant.get().name;
+    UI.confirm(
+      `This permanently erases ALL products, sales, invoices, customers, suppliers, expenses and stock history for ${here}. ` +
+      (synced
+        // With a server, the staff list lives there and is not erased, so it
+        // comes back on the next sync along with the store's settings.
+        ? 'It erases them ON THE SERVER as well, so every other terminal clears itself down on its next sync. '
+          + 'Your staff logins and store settings are kept. '
+        // Standalone, the local database is emptied outright: the app rebuilds
+        // itself on restart with a single default administrator.
+        : 'Your staff list is erased too — the system restarts with one administrator, '
+          + '"Owner Admin", PIN 1234. Change that PIN straight away. ') +
+      'This cannot be undone — download a backup first if you have not. Are you absolutely sure?',
+      async () => {
+        const label = wipeBtn.textContent;
+        wipeBtn.disabled = true;
+        try {
+          if (synced) {
+            wipeBtn.textContent = 'Erasing on the server…';
+            await Sync.eraseServer();
+          }
+          wipeBtn.textContent = 'Erasing locally…';
+          await DB.wipe();
+          await DB.setting('seeded', false);
+          if (synced) {
+            /* The wipe also dropped the sync cursor, so this pull starts from
+               scratch. That is what we want: the server now sends the rows
+               back as tombstones (deleted, no data), which apply as deletes
+               and leave the till empty, while settings and staff — which were
+               never erased — come back intact. */
+            wipeBtn.textContent = 'Re-syncing…';
+            await Sync.cycle().catch(() => {});
+          }
+          Store.bust();
+          UI.toast(synced ? 'Erased here and on the server' : 'Everything erased — starting empty', 'info');
+          setTimeout(() => location.reload(), 900);
+        } catch (e) {
+          wipeBtn.disabled = false; wipeBtn.textContent = label;
+          // Nothing local has been touched yet if the server call failed, so
+          // the shop is still intact — say so rather than leaving them guessing.
+          UI.toast('Erase failed: ' + e.message + ' — nothing was deleted', 'err');
+        }
+      }, { danger: true });
+  };
 
   root.querySelector('#loadDemo').onclick = async () => {
     const existing = (await DB.all('products')).length;

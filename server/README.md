@@ -99,6 +99,47 @@ backup are bcrypt-hashed on the way in.
 the dashboard/reports totals match the old install. Then repeat against the real
 databases and cut over.
 
+### Verify the import
+
+Don't eyeball the dashboard — a truncated import or a missing table can still
+leave a screen that looks plausible. `verify.js` recomputes the money from both
+sides and compares them line by line:
+
+```bash
+npm run verify -- bangeen ./bangeen-backup.json
+```
+
+It is read-only, so it is safe against a live database. It checks row counts,
+net revenue, profit, cost of goods, discounts, expenses, customer and supplier
+balances, stock units and inventory value — and three things that are easy to
+miss:
+
+- **duplicate invoice numbers** in the backup itself (refunds match their
+  original by number, so a duplicate silently misattributes a refund later);
+- **`invoiceSeq` present on the server**, without which the online till restarts
+  numbering at 1001 and reissues numbers the offline copy already used;
+- **`invoiceSeq` higher than the highest invoice** actually in the data.
+
+Exit code is 0 on a clean match, 1 if anything is off.
+
+### Cutting over a shop that is still trading
+
+The import is a **snapshot**. Any sale rung up on the old install after the
+export is stranded — it exists only there, and importing again later with
+`--wipe` would discard whatever was rung up online in the meantime.
+
+So do the real cut-over in one sitting, at close of business:
+
+1. **Rehearse** any time beforehand — export, import into a staging database,
+   `npm run verify`. This is where you find problems, not on the night.
+2. At close, on the old install: **Backup & Restore → Download Backup File**.
+   No more sales after this point.
+3. `npm run import -- <store> ./backup.json --wipe`
+4. `npm run verify -- <store> ./backup.json` — must print **PASS**.
+5. Point the shop's terminal at the server (Settings → Sync) and sign in.
+6. Keep the backup file. It is the only copy of that history until the server's
+   own backups have run at least once.
+
 ---
 
 ## 5. Run

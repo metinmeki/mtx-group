@@ -119,4 +119,36 @@ async function push(store, changes) {
   return { applied, conflicts };
 }
 
-module.exports = { pull, push };
+/* Erase every business record in a store, everywhere.
+
+   Rows are TOMBSTONED (deleted = true, seq bumped), not dropped. A hard DELETE
+   would remove them from the change feed entirely, so other terminals would
+   never learn they are gone — they would keep their local copies and push them
+   straight back on the next sync. Marking them deleted puts the removal INTO
+   the feed, so every terminal that syncs clears itself down too.
+
+   `users` is left alone: wiping the staff list would lock everyone out of the
+   store, including whoever pressed the button. Settings are kept for the same
+   practical reason — store name, currency and receipt details are configuration,
+   not trading data, and the app expects them to exist. */
+async function eraseData(store) {
+  const cleared = {};
+  await db.withTx(store, async (client) => {
+    for (const t of SYNC_TABLES) {
+      if (t.store === 'settings') continue;
+      const pk = t.key || 'id';
+      const { rowCount } = await client.query(
+        `UPDATE ${t.sql}
+            SET deleted = true, data = NULL, client_mtime = $1,
+                seq = nextval('change_seq'), updated_at = now()
+          WHERE deleted = false`,
+        [Date.now()],
+      );
+      cleared[t.store] = rowCount;
+      void pk;
+    }
+  });
+  return { cleared };
+}
+
+module.exports = { pull, push, eraseData };

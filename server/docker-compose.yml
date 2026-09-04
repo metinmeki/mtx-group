@@ -1,12 +1,15 @@
 # Local PostgreSQL for development and testing.
 #
-#   docker compose up -d          # start Postgres on localhost:5432
+#   docker compose up -d          # start Postgres on 127.0.0.1:5432
 #   cp .env.example .env          # then set PGUSER=mtx PGPASSWORD=mtx
 #   npm install && npm run setup  # create the per-store databases
 #   npm start
 #
 # For production the partner can use this same compose file, a managed
-# PostgreSQL (RDS / Neon / Supabase / DigitalOcean), or a system package.
+# PostgreSQL (RDS / Neon / Supabase / DigitalOcean), or a system package. In
+# every case, change POSTGRES_PASSWORD to a real generated secret before
+# `docker compose up` first creates the volume — the value below is only a
+# placeholder for local dev, and only takes effect on that first init.
 services:
   db:
     image: postgres:16-alpine
@@ -16,7 +19,9 @@ services:
       POSTGRES_PASSWORD: mtx
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      # Bound to loopback only — this container is reached over the Docker
+      # bridge by the Node server on the same host, never from outside it.
+      - "127.0.0.1:5432:5432"
     volumes:
       - mtx_pgdata:/var/lib/postgresql/data
     healthcheck:

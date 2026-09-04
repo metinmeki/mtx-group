@@ -261,6 +261,20 @@ const Sync = (() => {
     return cycle({ onProgress });
   }
 
+  /* Erase this store's trading data on the SERVER.
+
+     Without this, "Erase Everything" only clears the browser: the next pull
+     re-downloads the lot from the server and it looks as if the button did
+     nothing. The server tombstones the rows, so every other terminal clears
+     itself down on its next sync too.
+
+     Returns the per-table counts the server reported. */
+  async function eraseServer() {
+    const store = currentStore();
+    if (!store) throw new Error('No store selected');
+    return api('/api/erase', { method: 'POST', store, body: { confirm: store } });
+  }
+
   /* Turn sync off on this device and forget its server state. Local
      business data is left untouched. */
   async function disconnect() {
@@ -307,6 +321,7 @@ const Sync = (() => {
     configured, serverUrl, setServer, deviceId, token, testConnection,
     listUsers, login, signOut, hasOfflinePin, verifyPinOffline, saveUser, deleteUser,
     start, stop, cycle, nudge, fullResync, uploadLocal, disconnect,
+    eraseServer,
   };
 })();
 window.Sync = Sync;

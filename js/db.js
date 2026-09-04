@@ -219,8 +219,72 @@ const DB = (() => {
       return true;
     },
     async wipe() { for (const s of [...STORES, ...SYNC_STORES]) await api.clear(s); return true; },
+
+    /* ---------------- Whole-system backup ----------------
+       One file covering EVERY store, not just the one you're signed into.
+       Restoring it puts the whole install back exactly as it was when the
+       file was made — products, sales, invoices, customers, suppliers,
+       expenses, stock movements, staff and settings, for every shop.
+
+       The dashboard and reports are not stored separately: they are computed
+       from sales, products and expenses, so backing those up backs them up.
+
+       Each shop lives in its own database, so this walks the stores one at a
+       time and always returns to the one you started on, even on error. */
+    async exportSystem(onProgress) {
+      if (!window.Tenant) throw new Error('No stores registered');
+      const started = Tenant.id;
+      const out = {
+        meta: {
+          app: 'MTX Group Retail Suite', kind: 'system', version: VERSION,
+          exportedAt: Date.now(), stores: STORES_REG().map((s) => s.id),
+        },
+        stores: {},
+      };
+      try {
+        for (const s of STORES_REG()) {
+          if (onProgress) onProgress(s.name);
+          await Tenant.set(s.id);
+          const one = {};
+          for (const st of STORES) one[st] = await api.all(st);
+          out.stores[s.id] = { name: s.name, data: one };
+        }
+      } finally {
+        if (started) await Tenant.set(started);
+      }
+      return out;
+    },
+
+    /* Restore a whole-system file. Every shop in the file is wiped and
+       rewritten, so the install lands exactly on the snapshot — anything
+       recorded since is gone. Shops in the file that this build doesn't
+       know about are skipped and reported back. */
+    async importSystem(json, onProgress) {
+      if (!json || json.meta?.kind !== 'system' || !json.stores) {
+        throw new Error('That is not a whole-system backup file');
+      }
+      const started = Tenant.id;
+      const done = [], skipped = [];
+      try {
+        for (const [id, block] of Object.entries(json.stores)) {
+          if (!Tenant.find(id)) { skipped.push(id); continue; }
+          if (onProgress) onProgress(block.name || id);
+          await Tenant.set(id);
+          await api.wipe();
+          const data = block.data || block;
+          for (const st of STORES) if (data[st]) await api.bulk(st, data[st]);
+          done.push(block.name || id);
+        }
+      } finally {
+        if (started) await Tenant.set(started);
+      }
+      return { done, skipped };
+    },
+
     stores: STORES
   };
+  /* Read lazily: js/stores.js loads after this file. */
+  const STORES_REG = () => (window.STORES || []);
   return api;
 })();
 window.DB = DB;

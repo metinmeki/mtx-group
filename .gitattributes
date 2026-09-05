@@ -1,5 +1,9 @@
 * text=auto eol=lf
 
+# Windows batch files must keep CRLF or cmd.exe mis-parses labels and gotos
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
 *.png binary
 *.jpg binary
 *.ico binary
